@@ -50,6 +50,11 @@ class Client extends BaseClient
     private $cacheNotFound;
 
     /**
+     * @var int|null
+     */
+    private $cacheTtl;
+
+    /**
      * @var Cache
      */
     protected $cache;
@@ -108,6 +113,7 @@ class Client extends BaseClient
         $options['serializer'] = 'php';
         $options['prefix_key'] = 'storyblok:';
         $options['prefix_tag'] = 'storyblok:';
+        $this->cacheTtl = $options['ttl'] ?? null;
 
         switch ($driver) {
             case 'mysql':
@@ -209,7 +215,7 @@ class Client extends BaseClient
     {
         if ($this->cache) {
             $timestamp = time();
-            $this->cache->save($timestamp, self::CACHE_VERSION_KEY);
+            $this->cache->save($timestamp, self::CACHE_VERSION_KEY, null, $this->cacheTtl);
             $this->cacheVersion = $timestamp;
         }
 
@@ -329,7 +335,7 @@ class Client extends BaseClient
                     $result->httpResponseCode = 404;
                     $result->httpResponseHeaders = [];
 
-                    $this->cache->save($result, $cachekey);
+                    $this->cache->save($result, $cachekey, null, $this->cacheTtl);
                 }
 
                 throw new ApiException(self::EXCEPTION_GENERIC_HTTP_ERROR . ' - ' . $e->getMessage(), $e->getCode());
@@ -646,7 +652,7 @@ class Client extends BaseClient
             $response->httpResponseHeaders &&
             $response->httpResponseCode == 200) {
 
-            $this->cache->save($response, $key);
+            $this->cache->save($response, $key, null, $this->cacheTtl);
         }
     }
 
